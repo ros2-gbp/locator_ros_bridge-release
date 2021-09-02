@@ -1,3 +1,26 @@
+## locator_ros_bridge (foxy) - 2.0.3-1
+
+The packages in the `locator_ros_bridge` repository were released into the `foxy` distro by running `/usr/bin/bloom-release locator_ros_bridge --rosdistro foxy` on `Thu, 02 Sep 2021 18:39:15 -0000`
+
+The `bosch_locator_bridge` package was released.
+
+Version of package(s) in repository `locator_ros_bridge`:
+
+- upstream repository: https://github.com/boschglobal/locator_ros_bridge.git
+- release repository: https://github.com/ros2-gbp/locator_ros_bridge-release.git
+- rosdistro version: `2.0.2-1`
+- old version: `2.0.2-1`
+- new version: `2.0.3-1`
+
+Versions of tools used:
+
+- bloom version: `0.10.7`
+- catkin_pkg version: `0.4.23`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## locator_ros_bridge (rolling) - 2.1.3-1
 
 The packages in the `locator_ros_bridge` repository were released into the `rolling` distro by running `/usr/bin/bloom-release locator_ros_bridge --rosdistro rolling` on `Thu, 02 Sep 2021 18:34:18 -0000`
