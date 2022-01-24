@@ -14,7 +14,7 @@ It also allows to control the ROKIT Locator via ROS service calls.
 
 There are versions for the following ROS 1 and ROS 2 distributions:
 * ROS 1: Noetic (branch [noetic](../../tree/noetic), will likely also work on Melodic)
-* ROS 2: Foxy (this branch), Rolling (branch [main](../../tree/main), will likely also work on Galactic)
+* ROS 2: Foxy (branch [foxy](../../tree/foxy)), Rolling (this branch, will likely also work on Galactic)
 
 The following video (click on image) gives more information about the Rexroth ROKIT Locator.
 [![Rexroth ROKIT Locator](https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/components-for-mobile-robotics-stage_1280x720.jpg)](https://www.youtube.com/watch?v=g6SIUlXn9Bk)
@@ -25,7 +25,7 @@ The following video (click on image) gives more information about the Rexroth RO
 
 You can install the `bosch_locator_bridge` package directly:
 
-    sudo apt install ros-foxy-bosch-locator-bridge
+    sudo apt install ros-rolling-bosch-locator-bridge
 
 ### Building from Source
 

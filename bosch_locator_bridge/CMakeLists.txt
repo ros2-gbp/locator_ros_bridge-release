@@ -90,7 +90,13 @@ ament_target_dependencies(${PROJECT_NAME}_node
   Poco
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+if("$ENV{ROS_DISTRO}" STREQUAL "galactic")
+  add_compile_definitions(ROS_GALACTIC)
+  rosidl_target_interfaces(${PROJECT_NAME}_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+else()
+  rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+  target_link_libraries(${PROJECT_NAME}_node "${cpp_typesupport_target}")
+endif()
 
 add_executable(${PROJECT_NAME}_server_node
   src/rosmsgs_datagram_converter.cpp
@@ -108,8 +114,13 @@ ament_target_dependencies(${PROJECT_NAME}_server_node
   Poco
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_server_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
-
+if("$ENV{ROS_DISTRO}" STREQUAL "galactic")
+  add_compile_definitions(ROS_GALACTIC)
+  rosidl_target_interfaces(${PROJECT_NAME}_server_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+else()
+  rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+  target_link_libraries(${PROJECT_NAME}_server_node "${cpp_typesupport_target}")
+endif()
 
 install(TARGETS ${PROJECT_NAME}_node ${PROJECT_NAME}_server_node
   EXPORT export_${PROJECT_NAME}

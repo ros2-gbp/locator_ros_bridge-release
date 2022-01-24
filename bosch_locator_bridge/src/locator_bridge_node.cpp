@@ -22,7 +22,12 @@
 
 #include "tf2/convert.h"
 #include "tf2/LinearMath/Transform.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+
+#ifdef ROS_GALACTIC
+  #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#else
+  #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#endif
 
 #include "locator_rpc_interface.hpp"
 #include "receiving_interface.hpp"
@@ -101,7 +106,7 @@ void LocatorBridgeNode::init()
   syncConfig();
 
   callback_group_services_ = create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive);
 
   services_.push_back(
     create_service<bosch_locator_bridge::srv::ClientConfigGetEntry>(
