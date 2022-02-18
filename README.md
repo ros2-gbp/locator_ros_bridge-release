@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](LICENSE)
 [![Build status](http://build.ros.org/job/Ndev__locator_ros_bridge__ubuntu_focal_amd64/badge/icon?subject=Build%20farm%3A%20Noetic)](http://build.ros.org/job/Ndev__locator_ros_bridge__ubuntu_focal_amd64/)
 [![Build status](http://build.ros2.org/job/Fdev__locator_ros_bridge__ubuntu_focal_amd64/badge/icon?subject=Build%20farm%3A%20Foxy)](http://build.ros2.org/job/Fdev__locator_ros_bridge__ubuntu_focal_amd64/)
-[![Build status](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_focal_amd64/badge/icon?subject=Build%20farm%3A%20Rolling)](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_focal_amd64/)
+[![Build status](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_jammy_amd64/badge/icon?subject=Build%20farm%3A%20Rolling)](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_jammy_amd64/)
 [![Build action: Noetic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml/badge.svg?branch=noetic)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml)
 [![Build action: Foxy](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_foxy.yml/badge.svg?branch=foxy)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_foxy.yml)
 [![Build action: Rolling](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml)
@@ -14,7 +14,7 @@ It also allows to control the ROKIT Locator via ROS service calls.
 
 There are versions for the following ROS 1 and ROS 2 distributions:
 * ROS 1: Noetic (branch [noetic](../../tree/noetic), will likely also work on Melodic)
-* ROS 2: Foxy (branch [foxy](../../tree/foxy)), Rolling (this branch, will likely also work on Galactic)
+* ROS 2: Foxy (this branch), Rolling (branch [main](../../tree/main), will likely also work on Galactic)
 
 The following video (click on image) gives more information about the Rexroth ROKIT Locator.
 [![Rexroth ROKIT Locator](https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/components-for-mobile-robotics-stage_1280x720.jpg)](https://www.youtube.com/watch?v=g6SIUlXn9Bk)
@@ -25,9 +25,9 @@ The following video (click on image) gives more information about the Rexroth RO
 
 You can install the `bosch_locator_bridge` package directly:
 
-    sudo apt install ros-rolling-bosch-locator-bridge
+    sudo apt install ros-foxy-bosch-locator-bridge
 
-Note that the installed package may contain an older software version, which corresponds to the latest tag 2.1.x here: [tags]
+Note that the installed package may contain an older software version, which corresponds to the latest tag 2.0.x here: [tags]
 
 ### Building from Source
 
