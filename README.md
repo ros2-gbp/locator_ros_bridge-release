@@ -4,6 +4,7 @@
 [![Build status](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_jammy_amd64/badge/icon?subject=Build%20farm%3A%20Rolling)](http://build.ros2.org/job/Rdev__locator_ros_bridge__ubuntu_jammy_amd64/)
 [![Build action: Noetic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml/badge.svg?branch=noetic)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml)
 [![Build action: Foxy](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_foxy.yml/badge.svg?branch=foxy)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_foxy.yml)
+[![Build action: Galactic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_galactic.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_galactic.yml)
 [![Build action: Rolling](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml)
 
 # locator_ros_bridge
@@ -27,7 +28,11 @@ You can install the `bosch_locator_bridge` package directly:
 
     sudo apt install ros-foxy-bosch-locator-bridge
 
-Note that the installed package may contain an older software version, which corresponds to the latest tag 2.0.x here: [tags]
+Note that the installed package may contain an older software version, which corresponds to the latest tag 2.0.x here: [tags].
+Since the release of a package can take a while, the installed package may even be from an earlier tag.
+To be sure, check the version of the installed package as follows:
+
+    apt show ros-foxy-bosch-locator-bridge
 
 ### Building from Source
 
