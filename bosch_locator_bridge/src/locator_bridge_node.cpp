@@ -41,7 +41,7 @@ using std::placeholders::_2;
 /// locator module versions to check against. Format is name, { major_version, minor_version }
 static const std::unordered_map<std::string, std::pair<int32_t, int32_t>> REQUIRED_MODULE_VERSIONS({
   {"AboutModules", {5, 0}},
-  {"Session", {3, 1}},
+  {"Session", {3, 0}},
   {"Diagnostic", {4, 0}},
   {"Licensing", {6, 0}},
   {"Config", {5, 0}},
@@ -52,7 +52,7 @@ static const std::unordered_map<std::string, std::pair<int32_t, int32_t>> REQUIR
   {"ClientControl", {3, 1}},
   {"ClientRecording", {3, 2}},
   {"ClientMap", {3, 3}},
-  {"ClientLocalization", {5, 0}},
+  {"ClientLocalization", {5, 1}},
   {"ClientManualAlign", {4, 1}},
   {"ClientGlobalAlign", {4, 0}},
   {"ClientLaserMask", {5, 0}},
@@ -506,13 +506,18 @@ void LocatorBridgeNode::syncConfig()
   get_parameter("ClientSensor.laser.vehicleTransformLaser.y", laser_vehicle_transform_laser_y);
   loc_client_config["ClientSensor.laser.vehicleTransformLaser.y"] = laser_vehicle_transform_laser_y;
 
-  double laser_vehicle_transform_laser_yaw = 0.0;
+  double laser_vehicle_transform_laser_yaw = 0.0;  // angle in degrees
   declare_parameter(
     "ClientSensor.laser.vehicleTransformLaser.yaw",
     laser_vehicle_transform_laser_yaw);
   get_parameter("ClientSensor.laser.vehicleTransformLaser.yaw", laser_vehicle_transform_laser_yaw);
   loc_client_config["ClientSensor.laser.vehicleTransformLaser.yaw"] =
     laser_vehicle_transform_laser_yaw;
+
+  bool laser_use_intensites = false;
+  declare_parameter("ClientSensor.laser.useIntensities", laser_use_intensites);
+  get_parameter("ClientSensor.laser.useIntensities", laser_use_intensites);
+  loc_client_config["ClientSensor.laser.useIntensities"] = laser_use_intensites;
 
   bool enable_laser2 = false;
   declare_parameter("ClientSensor.enableLaser2", enable_laser2);
@@ -550,7 +555,7 @@ void LocatorBridgeNode::syncConfig()
   loc_client_config["ClientSensor.laser2.vehicleTransformLaser.y"] =
     laser2_vehicle_transform_laser_y;
 
-  double laser2_vehicle_transform_laser_yaw = 0.0;
+  double laser2_vehicle_transform_laser_yaw = 0.0;  // angle in degrees
   declare_parameter(
     "ClientSensor.laser2.vehicleTransformLaser.yaw",
     laser2_vehicle_transform_laser_yaw);
@@ -559,6 +564,11 @@ void LocatorBridgeNode::syncConfig()
     laser2_vehicle_transform_laser_yaw);
   loc_client_config["ClientSensor.laser2.vehicleTransformLaser.yaw"] =
     laser2_vehicle_transform_laser_yaw;
+
+  bool laser2_use_intensites = false;
+  declare_parameter("ClientSensor.laser2.useIntensities", laser2_use_intensites);
+  get_parameter("ClientSensor.laser2.useIntensities", laser2_use_intensites);
+  loc_client_config["ClientSensor.laser2.useIntensities"] = laser2_use_intensites;
 
   bool autostart = false;
   declare_parameter("ClientLocalization.autostart", autostart);
