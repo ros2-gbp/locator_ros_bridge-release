@@ -2,13 +2,19 @@
 Changelog for package bosch_locator_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.8 (2022-09-08)
+------------------
+* Fixed a bug that could cause latency in localization poses
+* Remove tf broadcaster
+* Check if laser scan message is valid
+* Add refresh timer to service callback group to avoid overlapping json rpc calls
+* Update to ROKIT Locator version 1.5
+* Contributors: Fabian König, Stefan Laible
+
 2.0.7 (2022-06-13)
 ------------------
-* Change version numbers in server_bridge_node for compatibility with v1.4.0 (`#13 <https://github.com/boschglobal/locator_ros_bridge/issues/13>`_)
-* Make units of vehicleTransformLaser.yaw clear (`#11 <https://github.com/boschglobal/locator_ros_bridge/issues/11>`_)
-* Set laser*_use_intensities to false by default
-* Change version numbers for compatibility with v1.4.0
-* Add parameters for using intensities
+* fix module version check for compatibility with v1.4.0
+* add parameter to enable intensities
 * Contributors: Stefan Laible
 
 2.0.6 (2022-02-18)
