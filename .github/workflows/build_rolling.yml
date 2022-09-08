@@ -1,10 +1,10 @@
-name: "Build action: Foxy"
+name: "Build action: Rolling"
 
 on:
   push:
-    branches: [ foxy ]
+    branches: [ main ]
   pull_request:
-    branches: [ foxy ]
+    branches: [ main ]
   schedule:
     # Run once per day to detect broken dependencies.
     - cron: '33 6 * * *'
@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         # os: [ ubuntu-20.04, windows-latest, macOS-latest ]
-        os: [ ubuntu-20.04 ]
-        ros_distribution: [ foxy ]
+        os: [ ubuntu-22.04 ]
+        ros_distribution: [ rolling ]
     steps:
     - uses: actions/checkout@v2
     - uses: ros-tooling/setup-ros@v0.3
@@ -34,5 +34,5 @@ jobs:
             "build": {
               "mixin": ["coverage-gcc"]
             }
-          }   
+          }       
         colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml

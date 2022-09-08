@@ -22,7 +22,12 @@
 
 #include "tf2/convert.h"
 #include "tf2/LinearMath/Transform.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+
+#ifdef ROS_GALACTIC
+  #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#else
+  #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#endif
 
 #include "receiving_interface.hpp"
 #include "rosmsgs_datagram_converter.hpp"
@@ -649,9 +654,9 @@ void LocatorBridgeNode::checkLaserScan(
     RCLCPP_ERROR_STREAM(
       get_logger(),
       "LaserScan message is INVALID: " << msg->angle_min << " (angle_min) + " <<
-      (msg->ranges.size() - 1) << " (ranges.size - 1) * " << msg->angle_increment <<
+        msg->ranges.size() - 1 << " (ranges.size - 1) * " << msg->angle_increment <<
         " (angle_increment) = " <<
-      (msg->angle_min + (msg->ranges.size() - 1) * msg->angle_increment) << ", expected " <<
+        msg->angle_min + (msg->ranges.size() - 1) * msg->angle_increment << ", expected " <<
         msg->angle_max << " (angle_max)");
   } else {
     const std::string param_name = "ClientSensor." + laser + ".useIntensities";
