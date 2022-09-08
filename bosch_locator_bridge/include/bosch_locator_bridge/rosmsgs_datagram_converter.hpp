@@ -42,7 +42,6 @@
 
 #define MAP_FRAME_ID "map"
 #define ODOM_FRAME_ID "odom"
-#define LASER_FRAME_ID "base_laser"
 
 /**
  * Class with static function to convert ros messages to locator's datagrams.
@@ -199,6 +198,7 @@ private:
   static void colorizePointCloud(
     pcl::PointCloud<pcl::PointXYZRGB> & point_cloud,
     const std::vector<uint64_t> & sensor_offsets);
+  static size_t discardExtension(Poco::BinaryReader & binary_reader);
   static void readIntensities(Poco::BinaryReader & binary_reader);
   static std::vector<uint64_t> readSensorOffsets(Poco::BinaryReader & binary_reader);
 
