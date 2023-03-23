@@ -25,12 +25,7 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include "tf2/convert.h"
 #include "tf2/LinearMath/Quaternion.h"
-
-#ifdef ROS_GALACTIC
-  #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#else
-  #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
-#endif
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 #include "bosch_locator_bridge/msg/client_global_align_landmark_observation_notice.hpp"
 #include "bosch_locator_bridge/msg/client_global_align_landmark_visualization_information.hpp"
@@ -199,7 +194,7 @@ size_t RosMsgsDatagramConverter::convertClientLocalizationPoseDatagram2Message(
 
   double age, stamp;
   binary_reader >> age >> stamp;
-  client_localization_pose.age = rclcpp::Duration::from_seconds(age);
+  client_localization_pose.age = rclcpp::Duration(age * 1e9);
   client_localization_pose.timestamp = rclcpp::Time(stamp * 1e9);
   binary_reader >> client_localization_pose.unique_id >> client_localization_pose.state;
 

@@ -7,7 +7,6 @@
 [![Build action: Galactic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_galactic.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_galactic.yml)
 [![Build action: Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_humble.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_humble.yml)
 [![Build action: Rolling](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_rolling.yml)
-[![Build action (utils): Galactic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_utils_galactic.yml/badge.svg?branch=main)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_utils_galactic.yml)
 
 ---
 **Level Up Your Mobile Robots. Rexroth ROKIT Locator – Your Easy-to-Use Laser Localization Software**
@@ -22,9 +21,7 @@ It also allows to control the ROKIT Locator via ROS service calls.
 
 There are versions for the following ROS 1 and ROS 2 distributions:
 * ROS 1: Noetic (branch [noetic](../../tree/noetic), will likely also work on Melodic)
-* ROS 2: Foxy (branch [foxy](../../tree/foxy)), Rolling (this branch, will likely also work on Galactic)
-
-The repository also contains the [bosch_locator_bridge_utils](bosch_locator_bridge_utils) package, which provides an interface between the bosch_locator_bridge and [Nav2], the navigation stack of ROS 2.
+* ROS 2: Foxy (this branch), Rolling (branch [main](../../tree/main), will likely also work on Galactic)
 
 The following video (click on image) gives more information about the ROKIT Locator.
 [![Rexroth ROKIT Locator](https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/rokit/landingpage-stage-bild-keyvisual-locator-gruppe-a.jpg)](https://www.youtube.com/watch?v=g6SIUlXn9Bk)
@@ -35,13 +32,13 @@ The following video (click on image) gives more information about the ROKIT Loca
 
 You can install the `bosch_locator_bridge` package directly:
 
-    sudo apt install ros-rolling-bosch-locator-bridge
+    sudo apt install ros-foxy-bosch-locator-bridge
 
-Note that the installed package may contain an older software version, which corresponds to the latest tag 2.1.x here: [tags].
+Note that the installed package may contain an older software version, which corresponds to the latest tag 2.0.x here: [tags].
 Since the release of a package can take a while, the installed package may even be from an earlier tag.
 To be sure, check the version of the installed package as follows:
 
-    apt show ros-rolling-bosch-locator-bridge
+    apt show ros-foxy-bosch-locator-bridge
 
 ### Building from Source
 
@@ -61,14 +58,12 @@ To build from source, make sure your colcon workspace is set up correctly. Then 
 ## How to Get Started
 
 To get started, take a look at the [README.md](bosch_locator_bridge/README.md) of the bosch_locator_bridge package.
-And for the bosch_locator_bridge_utils package, please have a look at [README.md](bosch_locator_bridge_utils/README.md).
 
 ## License
 
 locator_ros_bridge is open-sourced under the Apache-2.0 license. See the [LICENSE](LICENSE) file for details.
 
 
-[Nav2]: https://navigation.ros.org/
 [ROS]: https://www.ros.org/
 [Poco]: https://pocoproject.org/
 [Rexroth ROKIT Locator]: https://www.boschrexroth.com/en/xc/products/product-groups/components-for-mobile-robotics/index
