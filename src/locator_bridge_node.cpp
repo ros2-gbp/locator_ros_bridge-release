@@ -44,7 +44,7 @@ static const std::unordered_map<std::string, std::pair<int32_t, int32_t>> REQUIR
   {"Session", {3, 1}},
 //  {"Diagnostic", {4, 0}},
   {"Licensing", {6, 1}},
-  {"Config", {5, 0}},
+  {"Config", {5, 1}},
   {"AboutBuild", {3, 0}},
   {"Certificate", {3, 0}},
   {"System", {3, 1}},
@@ -52,7 +52,7 @@ static const std::unordered_map<std::string, std::pair<int32_t, int32_t>> REQUIR
   {"ClientControl", {3, 1}},
   {"ClientRecording", {4, 0}},
   {"ClientMap", {4, 0}},
-  {"ClientLocalization", {6, 0}},
+  {"ClientLocalization", {7, 0}},
 //  {"ClientManualAlign", {5, 0}},
   {"ClientGlobalAlign", {4, 0}},
 //  {"ClientLaserMask", {5, 0}},
@@ -560,7 +560,17 @@ void LocatorBridgeNode::syncConfig()
     provide_odometry_data_ = false;
   }
 
-  loc_client_interface_->setConfigList(loc_client_config);
+  if (!loc_client_interface_->setConfigList(loc_client_config)) {
+    // Try to stop everything before setting config list
+    RCLCPP_WARN(
+      get_logger(),
+      "One of the modes appears to be in a RUN-state. In order to set the configuration parameters,"
+      " all modes are now stopped! Localization is started afterwards automatically.");
+    clientRecordingStopVisualRecordingCb(nullptr, nullptr);
+    clientMapStopCb(nullptr, nullptr);
+    clientLocalizationStopCb(nullptr, nullptr);
+    loc_client_interface_->setConfigList(loc_client_config);
+  }
 }
 
 void LocatorBridgeNode::checkLaserScan(
