@@ -1,1 +1,1 @@
-{"base": "1dd425f", "parent": "debian/rolling/bosch_locator_bridge", "previous": "c8cc71d", "trim": "", "trimbase": ""}
+{"base": "5be3b79", "parent": "debian/iron/bosch_locator_bridge", "previous": "8be284a", "trim": "", "trimbase": ""}
