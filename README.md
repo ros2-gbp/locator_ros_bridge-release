@@ -1,3 +1,29 @@
+## locator_ros_bridge (rolling) - 2.1.10-1
+
+The packages in the `locator_ros_bridge` repository were released into the `rolling` distro by running `/usr/bin/bloom-release locator_ros_bridge --rosdistro rolling` on `Tue, 31 Oct 2023 08:45:41 -0000`
+
+The `bosch_locator_bridge` package was released.
+
+These packages were explicitly ignored:
+- `bosch_locator_bridge_utils`
+
+Version of package(s) in repository `locator_ros_bridge`:
+
+- upstream repository: https://github.com/boschglobal/locator_ros_bridge.git
+- release repository: https://github.com/ros2-gbp/locator_ros_bridge-release.git
+- rosdistro version: `2.1.9-2`
+- old version: `2.1.9-2`
+- new version: `2.1.10-1`
+
+Versions of tools used:
+
+- bloom version: `0.10.7`
+- catkin_pkg version: `0.4.24`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## locator_ros_bridge (rolling) - 2.1.9-2
 
 The packages in the `locator_ros_bridge` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling locator_ros_bridge` on `Tue, 28 Mar 2023 08:47:03 -0000`
