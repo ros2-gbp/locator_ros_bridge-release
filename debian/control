@@ -1,0 +1,12 @@
+Source: ros-rolling-bosch-locator-bridge
+Section: misc
+Priority: optional
+Maintainer: Stefan Laible <stefan.laible@de.bosch.com>
+Build-Depends: debhelper (>= 9.0.0), libgeometry-msgs-dev, libnav-msgs-dev, libpcl-conversions-dev, libpoco-dev, libsensor-msgs-dev, libstd-srvs-dev, libtf2-geometry-msgs-dev, libtf2-ros-dev, python3-geometry-msgs, python3-nav-msgs, python3-sensor-msgs, python3-std-srvs, python3-tf2-geometry-msgs, python3-tf2-ros, ros-geometry-msgs, ros-nav-msgs, ros-rolling-ament-cmake, ros-rolling-ament-lint-auto, ros-rolling-ament-lint-common, ros-rolling-launch-xml, ros-rolling-rclcpp, ros-rolling-rosidl-default-generators, ros-sensor-msgs, ros-std-srvs, ros-rolling-ros-workspace, ros-rolling-rosidl-typesupport-fastrtps-c, ros-rolling-rosidl-typesupport-fastrtps-cpp
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-bosch-locator-bridge
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgeometry-msgs-dev, libnav-msgs-dev, libpcl-conversions-dev, libpoco-dev, libsensor-msgs-dev, libstd-srvs-dev, libtf2-geometry-msgs-dev, libtf2-ros-dev, python3-geometry-msgs, python3-nav-msgs, python3-sensor-msgs, python3-std-srvs, python3-tf2-geometry-msgs, python3-tf2-ros, ros-geometry-msgs, ros-nav-msgs, ros-rolling-launch-xml, ros-rolling-rclcpp, ros-rolling-rosidl-default-runtime, ros-sensor-msgs, ros-std-srvs, ros-rolling-ros-workspace
+Description: ROS interface to Rexroth ROKIT Locator
