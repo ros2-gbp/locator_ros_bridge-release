@@ -31,11 +31,15 @@
 #include "nav_msgs/msg/odometry.hpp"
 
 #include "bosch_locator_bridge/srv/client_config_get_entry.hpp"
+#include "bosch_locator_bridge/srv/client_expand_map_enable.hpp"
+#include "bosch_locator_bridge/srv/client_recording_set_current_pose.hpp"
 #include "bosch_locator_bridge/srv/client_map_list.hpp"
 #include "bosch_locator_bridge/srv/client_map_send.hpp"
 #include "bosch_locator_bridge/srv/client_map_set.hpp"
 #include "bosch_locator_bridge/srv/client_map_start.hpp"
 #include "bosch_locator_bridge/srv/start_recording.hpp"
+
+#include "locator_rpc_interface.hpp"
 
 // forward declarations
 class LocatorRPCInterface;
@@ -49,6 +53,8 @@ class ClientLocalizationMapInterface;
 class ClientLocalizationVisualizationInterface;
 class ClientLocalizationPoseInterface;
 class ClientGlobalAlignVisualizationInterface;
+class ClientExpandMapVisualizationInterface;
+class ClientExpandMapPriorMapInterface;
 
 /**
  * This is the main ROS node. It binds together the ROS interface and the Locator API.
@@ -65,6 +71,10 @@ private:
   bool check_module_versions(
     const std::unordered_map<std::string, std::pair<int32_t,
     int32_t>> & module_versions);
+  template<typename T>
+  bool get_config_entry(const std::string & name, T & value) const;
+  template<typename T>
+  bool set_config_entry(const std::string & name, const T & value) const;
 
   void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
   void laser2_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
@@ -107,10 +117,25 @@ private:
     const std::shared_ptr<std_srvs::srv::Empty::Request> req,
     std::shared_ptr<std_srvs::srv::Empty::Response> res);
 
+  bool clientExpandMapEnableCb(
+    const std::shared_ptr<bosch_locator_bridge::srv::ClientExpandMapEnable::Request> req,
+    std::shared_ptr<bosch_locator_bridge::srv::ClientExpandMapEnable::Response> res);
+  bool clientExpandMapDisableCb(
+    const std::shared_ptr<std_srvs::srv::Empty::Request> req,
+    std::shared_ptr<std_srvs::srv::Empty::Response> res);
+
+  bool clientRecordingSetCurrentPoseCb(
+    const std::shared_ptr<bosch_locator_bridge::srv::ClientRecordingSetCurrentPose::Request> req,
+    std::shared_ptr<bosch_locator_bridge::srv::ClientRecordingSetCurrentPose::Response> res);
+
   /// read out ROS parameters and use them to update the locator config
   void syncConfig();
 
-  void setupBinaryReceiverInterfaces(const std::string & host);
+  /// Check if laser scan message is valid
+  void checkLaserScan(
+    const sensor_msgs::msg::LaserScan::SharedPtr msg,
+    const std::string & laser) const;
+  void setupBinaryReceiverInterfaces(const std::string & host, const Poco::UInt16 binaryPortsStart);
 
   std::unique_ptr<LocatorRPCInterface> loc_client_interface_;
 
@@ -122,6 +147,7 @@ private:
   // Flag to indicate if the bridge should send odometry data to the locator.
   // Value retrieved by the locator settings.
   bool provide_odometry_data_;
+  bool odometry_velocity_set_;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
   std::unique_ptr<SendingInterface> laser_sending_interface_;
   Poco::Thread laser_sending_interface_thread_;
@@ -161,6 +187,10 @@ private:
   std::unique_ptr<ClientGlobalAlignVisualizationInterface>
   client_global_align_visualization_interface_;
   Poco::Thread client_global_align_visualization_interface_thread_;
+  std::unique_ptr<ClientExpandMapVisualizationInterface> client_expandmap_visualization_interface_;
+  Poco::Thread client_expandmap_visualization_interface_thread_;
+  std::unique_ptr<ClientExpandMapPriorMapInterface> client_expandmap_priormap_interface_;
+  Poco::Thread client_expandmap_priormap_interface_thread_;
 
   size_t scan_num_ {0};
   size_t scan2_num_ {0};
@@ -172,5 +202,36 @@ private:
   rclcpp::Time prev_laser_timestamp_;
   rclcpp::Time prev_laser2_timestamp_;
 };
+
+template<typename T>
+bool LocatorBridgeNode::get_config_entry(const std::string & name, T & value) const
+{
+  const auto & loc_client_config = loc_client_interface_->getConfigList();
+
+  try {
+    loc_client_config[name].convert(value);
+  } catch (const Poco::NotFoundException & error) {
+    RCLCPP_ERROR_STREAM(get_logger(), "Could not find config entry " << name << ".");
+    return false;
+  }
+
+  return true;
+}
+
+template<typename T>
+bool LocatorBridgeNode::set_config_entry(const std::string & name, const T & value) const
+{
+  auto loc_client_config = loc_client_interface_->getConfigList();
+
+  try {
+    loc_client_config[name] = value;
+  } catch (const Poco::NotFoundException & error) {
+    RCLCPP_ERROR_STREAM(get_logger(), "Could not find config entry " << name << ".");
+    return false;
+  }
+
+  loc_client_interface_->setConfigList(loc_client_config);
+  return true;
+}
 
 #endif  // BOSCH_LOCATOR_BRIDGE__LOCATOR_BRIDGE_NODE_HPP_
