@@ -8,7 +8,7 @@ This package provides a [ROS 2] interface to the [Rexroth ROKIT Locator].
 It translates ROS 2 messages to the ROKIT Locator API (as described in the ROKIT Locator API documentation) and vice versa.
 It also allows to control the ROKIT Locator via ROS 2 service calls.
 
-The package has been tested under [ROS 2] Rolling and Ubuntu 20.04.
+The package has been tested under [ROS 2] Humble and Ubuntu 22.04.
 The bridge is compatible with ROKIT Locator version 1.8.
 If you have an earlier version, see [Support of earlier versions of ROKIT Locator](#support-of-earlier-versions-of-rokit-locator).
 
@@ -198,7 +198,7 @@ To correctly forward the laser scan data, it is important that `ClientSensor.las
 
     Latest estimated pose of the laser sensor during the recording process.
 
-* **`/bridge_node/client_recording_visualization/scan`** ([sensor_msgs/msg/LaserScan])
+* **`/bridge_node/client_recording_visualization/scan`** ([sensor_msgs/msg/PointCloud2])
 
     Latest processed laser scan during the recording process.
 
@@ -228,7 +228,7 @@ To correctly forward the laser scan data, it is important that `ClientSensor.las
 
     Localization information.
 
-* **`/bridge_node/client_localization_pose/pose`** ([geometry_msgs/msg/PoseStamped])
+* **`/bridge_node/client_localization_pose/pose`** ([geometry_msgs/msg/PoseWithCovarianceStamped])
 
     6 DoF pose of the laser sensor during localization process.
 
@@ -238,11 +238,11 @@ To correctly forward the laser scan data, it is important that `ClientSensor.las
 
 ##### Map Expansion
 
-* **`/bridge_node/client_expandmap_priormap`** ([sensor_msgs/PointCloud2])
+* **`/bridge_node/client_expandmap_priormap`** ([sensor_msgs/msg/PointCloud2])
 
     Prior map as point cloud.
 
-* **`/bridge_node/client_expandmap_visualization`** ([bosch_locator_bridge/ClientExpandMapVisualization](./msg/ClientExpandMapVisualization.msg))
+* **`/bridge_node/client_expandmap_visualization`** ([bosch_locator_bridge/msg/ClientExpandMapVisualization](./msg/ClientExpandMapVisualization.msg))
 
     Map expansion information, e.g. zones.
 
@@ -288,7 +288,7 @@ To correctly forward the laser scan data, it is important that `ClientSensor.las
 
     Enable the map expansion
 
-* **`/bridge_node/disable_map_expansion`** ([std_srvs/Empty])
+* **`/bridge_node/disable_map_expansion`** ([std_srvs/srv/Empty])
 
     Disable the map expansion
 
@@ -349,28 +349,36 @@ To avoid this, make sure `LaserScan` messages are sent to the bridge before swit
 
 ## Support of earlier versions of ROKIT Locator
 
-If you have version 1.6 of ROKIT Locator, checkout the corresponding tag:
+Note that version 1.6 and earlier of ROKIT Locator were developed for ROS Galactic, and [`bosch_locator_bridge_utils`](bosch_locator_bridge_utils) does not built with ROS Humble.
+But if you want to build [`bosch_locator_bridge`](bosch_locator_bridge) only, you can ignore `bosch_locator_bridge_utils` by putting a file named `COLCON_IGNORE` in the package folder:
+```
+touch locator_ros_bridge/bosch_locator_bridge_utils/COLCON_IGNORE
+```
 
-    git checkout 2.1.9 -b main-v1.6
+But if you need the `bosch_locator_bridge_utils` package, see [issue #50](https://github.com/boschglobal/locator_ros_bridge/issues/50).
+
+If you have version 1.6, checkout the corresponding tag:
+
+    git checkout 2.1.9 -b galactic-v1.6
 
 And if you have version 1.5:
 
-    git checkout 2.1.8 -b main-v1.5
+    git checkout 2.1.8 -b galactic-v1.5
 
 And if you have version 1.4:
 
-    git checkout 2.1.6 -b main-v1.4
+    git checkout 2.1.6 -b galactic-v1.4
 
 And if you have version 1.3:
 
-    git checkout 2.1.4 -b main-v1.3
+    git checkout 2.1.4 -b galactic-v1.3
 
 And if you have version 1.2:
 
-    git checkout 2.1.2 -b main-v1.2
+    git checkout 2.1.2 -b galactic-v1.2
 
 
-[ROS 2]: https://docs.ros.org/en/rolling
+[ROS 2]: https://docs.ros.org/en/humble
 [Rexroth ROKIT Locator]: https://www.boschrexroth.com/en/xc/products/product-groups/components-for-mobile-robotics/index
 [Poco]: https://pocoproject.org/
 [sensor_msgs/msg/LaserScan]: https://github.com/ros2/common_interfaces/blob/master/sensor_msgs/msg/LaserScan.msg

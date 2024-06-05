@@ -2,9 +2,9 @@ name: "Build action (utils): Humble"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ humble ]
   pull_request:
-    branches: [ main ]
+    branches: [ humble ]
   schedule:
     # Run once per day to detect broken dependencies.
     - cron: '33 6 * * *'
@@ -19,7 +19,7 @@ jobs:
         os: [ ubuntu-22.04 ]
         ros_distribution: [ humble ]
     steps:
-    - uses: ros-tooling/setup-ros@v0.6
+    - uses: ros-tooling/setup-ros@v0.7
       with:
         required-ros-distributions: ${{ matrix.ros_distribution }}
     - uses : ros-tooling/action-ros-ci@v0.3
