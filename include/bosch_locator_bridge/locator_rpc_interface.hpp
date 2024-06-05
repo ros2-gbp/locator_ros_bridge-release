@@ -19,6 +19,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/HTTPClientSession.h>
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -41,7 +42,7 @@ public:
   std::unordered_map<std::string, std::pair<int32_t, int32_t>> getAboutModules();
 
   Poco::DynamicStruct getConfigList();
-  void setConfigList(const Poco::DynamicStruct & config);
+  bool setConfigList(const Poco::DynamicStruct & config);
 
   Poco::JSON::Object getSessionQuery() const;
   Poco::JSON::Object call(const std::string & method, const Poco::JSON::Object & query_obj);
@@ -50,6 +51,7 @@ protected:
   Poco::JSON::Object json_rpc_call(
     Poco::Net::HTTPClientSession & session, const std::string & method,
     const Poco::JSON::Object & query_obj);
+  std::mutex json_rpc_call_mutex_;
   Poco::Net::HTTPClientSession session_;
   std::string session_id_;
   size_t query_id_;

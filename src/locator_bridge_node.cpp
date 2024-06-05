@@ -15,6 +15,7 @@
 
 #include "locator_bridge_node.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -29,7 +30,6 @@
   #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #endif
 
-#include "locator_rpc_interface.hpp"
 #include "receiving_interface.hpp"
 #include "rosmsgs_datagram_converter.hpp"
 #include "sending_interface.hpp"
@@ -42,27 +42,30 @@ using std::placeholders::_2;
 static const std::unordered_map<std::string, std::pair<int32_t, int32_t>> REQUIRED_MODULE_VERSIONS({
   {"AboutModules", {5, 0}},
   {"Session", {3, 1}},
-  {"Diagnostic", {4, 0}},
-  {"Licensing", {6, 0}},
-  {"Config", {5, 0}},
-  {"AboutBuild", {3, 0}},
+  {"System", {3, 2}},
+//  {"Diagnostic", {5, 1}},
+  {"Licensing", {7, 1}},
+  {"Config", {8, 0}},
+  {"AboutBuild", {3, 1}},
   {"Certificate", {3, 0}},
-  {"System", {3, 1}},
-  {"ClientApplication", {1, 0}},
-  {"ClientControl", {3, 1}},
-  {"ClientRecording", {3, 2}},
-  {"ClientMap", {3, 3}},
-  {"ClientLocalization", {5, 0}},
-  {"ClientManualAlign", {4, 1}},
+//  {"User", {1, 0}},
+//  {"ClientApplication", {1, 1}},
+  {"ClientControl", {3, 2}},
+  {"ClientRecording", {4, 0}},
+  {"ClientMap", {4, 0}},
+  {"ClientLocalization", {7, 2}},
+//  {"ClientManualAlign", {5, 0}},
   {"ClientGlobalAlign", {4, 0}},
-  {"ClientLaserMask", {5, 0}},
-  {"ClientSensor", {5, 0}},
-  {"ClientUser", {4, 0}},
-  {"ClientExpandMap", {1, 0}},
+//  {"ClientLaserMask", {6, 0}},
+  {"ClientSensor", {7, 0}},
+//  {"ClientUser", {4, 0}},
+  {"ClientExpandMap", {4, 0}},
 });
 
 LocatorBridgeNode::LocatorBridgeNode(const std::string & nodeName)
-: Node(nodeName)
+: Node(nodeName,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true)
+    .automatically_declare_parameters_from_overrides(true))
 {
 }
 
@@ -85,24 +88,30 @@ LocatorBridgeNode::~LocatorBridgeNode()
 void LocatorBridgeNode::init()
 {
   std::string host;
-  declare_parameter("locator_host", host);
   get_parameter("locator_host", host);
+  int tmp_binaryPortsStart, tmp_rpcPort;
+  get_parameter("locator_binaryPortsStart", tmp_binaryPortsStart);
+  uint16_t binaryPortsStart{static_cast<uint16_t>(tmp_binaryPortsStart)};
+  get_parameter("locator_RPC_Port", tmp_rpcPort);
+  uint16_t rpcPort{static_cast<uint16_t>(tmp_rpcPort)};
 
   std::string user, pwd;
-  declare_parameter("user_name", user);
   get_parameter("user_name", user);
-  declare_parameter("password", pwd);
   get_parameter("password", pwd);
+
+  callback_group_services_ = create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
 
   // NOTE for now, we only have a session management with the localization client
   // Same thing is likely needed for the map server
-  loc_client_interface_.reset(new LocatorRPCInterface(host, 8080));
+  loc_client_interface_.reset(new LocatorRPCInterface(host, rpcPort));
   loc_client_interface_->login(user, pwd);
   session_refresh_timer_ = create_wall_timer(
     30s, [&]() {
       RCLCPP_INFO_STREAM(get_logger(), "refreshing session!");
       loc_client_interface_->refresh();
-    });
+    },
+    callback_group_services_);
 
   const auto module_versions = loc_client_interface_->getAboutModules();
   if (!check_module_versions(module_versions)) {
@@ -110,9 +119,6 @@ void LocatorBridgeNode::init()
   }
 
   syncConfig();
-
-  callback_group_services_ = create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
 
   services_.push_back(
     create_service<bosch_locator_bridge::srv::ClientConfigGetEntry>(
@@ -147,7 +153,8 @@ void LocatorBridgeNode::init()
       rmw_qos_profile_services_default, callback_group_services_));
   services_.push_back(
     create_service<std_srvs::srv::Empty>(
-      "~/stop_localization", std::bind(&LocatorBridgeNode::clientLocalizationStopCb, this, _1, _2),
+      "~/stop_localization",
+      std::bind(&LocatorBridgeNode::clientLocalizationStopCb, this, _1, _2),
       rmw_qos_profile_services_default, callback_group_services_));
 
   services_.push_back(
@@ -160,7 +167,23 @@ void LocatorBridgeNode::init()
       rmw_qos_profile_services_default, callback_group_services_));
   services_.push_back(
     create_service<bosch_locator_bridge::srv::ClientMapList>(
-      "~/list_client_maps", std::bind(&LocatorBridgeNode::clientMapList, this, _1, _2),
+      "~/list_client_maps",
+      std::bind(&LocatorBridgeNode::clientMapList, this, _1, _2),
+      rmw_qos_profile_services_default, callback_group_services_));
+  services_.push_back(
+    create_service<bosch_locator_bridge::srv::ClientExpandMapEnable>(
+      "~/enable_map_expansion",
+      std::bind(&LocatorBridgeNode::clientExpandMapEnableCb, this, _1, _2),
+      rmw_qos_profile_services_default, callback_group_services_));
+  services_.push_back(
+    create_service<std_srvs::srv::Empty>(
+      "~/disable_map_expansion",
+      std::bind(&LocatorBridgeNode::clientExpandMapDisableCb, this, _1, _2),
+      rmw_qos_profile_services_default, callback_group_services_));
+  services_.push_back(
+    create_service<bosch_locator_bridge::srv::ClientRecordingSetCurrentPose>(
+      "~/recording_set_current_pose",
+      std::bind(&LocatorBridgeNode::clientRecordingSetCurrentPoseCb, this, _1, _2),
       rmw_qos_profile_services_default, callback_group_services_));
 
   // subscribe to default topic published by rviz "2D Pose Estimate" button for setting seed
@@ -172,7 +195,6 @@ void LocatorBridgeNode::init()
   // Create interface to send binary laser data if requested
   if (provide_laser_data_) {
     int laser_datagram_port;
-    declare_parameter("laser_datagram_port", laser_datagram_port);
     get_parameter("laser_datagram_port", laser_datagram_port);
 
     laser_sending_interface_.reset(new SendingInterface(laser_datagram_port, shared_from_this()));
@@ -181,7 +203,6 @@ void LocatorBridgeNode::init()
     // Create subscriber to laser data
 
     std::string scan_topic = "/scan";
-    declare_parameter("scan_topic", scan_topic);
     get_parameter("scan_topic", scan_topic);
 
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -198,7 +219,6 @@ void LocatorBridgeNode::init()
   // Create interface to send binary laser2 data if requested
   if (provide_laser2_data_) {
     int laser2_datagram_port;
-    declare_parameter("laser2_datagram_port", laser2_datagram_port);
     get_parameter("laser2_datagram_port", laser2_datagram_port);
 
     laser2_sending_interface_.reset(new SendingInterface(laser2_datagram_port, shared_from_this()));
@@ -207,7 +227,6 @@ void LocatorBridgeNode::init()
     // Create subscriber to laser2 data
 
     std::string scan2_topic = "/scan2";
-    declare_parameter("scan2_topic", scan2_topic);
     get_parameter("scan2_topic", scan2_topic);
 
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -224,7 +243,6 @@ void LocatorBridgeNode::init()
   // Create interface to send binary odometry data if requested
   if (provide_odometry_data_) {
     int odom_datagram_port;
-    declare_parameter("odom_datagram_port", odom_datagram_port);
     get_parameter("odom_datagram_port", odom_datagram_port);
 
     odom_sending_interface_.reset(new SendingInterface(odom_datagram_port, shared_from_this()));
@@ -233,7 +251,6 @@ void LocatorBridgeNode::init()
     // Create subscriber to odometry data
 
     std::string odom_topic = "/odom";
-    declare_parameter("odom_topic", odom_topic);
     get_parameter("odom_topic", odom_topic);
 
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -245,9 +262,11 @@ void LocatorBridgeNode::init()
       create_subscription<nav_msgs::msg::Odometry>(
       odom_topic, qos,
       std::bind(&LocatorBridgeNode::odom_callback, this, _1));
+
+    get_parameter("odometry_velocity_set", odometry_velocity_set_);
   }
 
-  setupBinaryReceiverInterfaces(host);
+  setupBinaryReceiverInterfaces(host, static_cast<Poco::UInt16>(binaryPortsStart));
 
   RCLCPP_INFO_STREAM(get_logger(), "initialization done");
 }
@@ -298,7 +317,11 @@ void LocatorBridgeNode::laser_callback(const sensor_msgs::msg::LaserScan::Shared
     msg,
     ++scan_num_,
     shared_from_this());
-  laser_sending_interface_->sendData(laserscan_datagram.begin(), laserscan_datagram.size());
+  if (laser_sending_interface_->sendData(laserscan_datagram.begin(), laserscan_datagram.size()) ==
+    SendingInterface::SendingStatus::IO_EXCEPTION)
+  {
+    checkLaserScan(msg, "laser");
+  }
 }
 
 void LocatorBridgeNode::laser2_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
@@ -316,7 +339,11 @@ void LocatorBridgeNode::laser2_callback(const sensor_msgs::msg::LaserScan::Share
     msg,
     ++scan2_num_,
     shared_from_this());
-  laser2_sending_interface_->sendData(laserscan_datagram.begin(), laserscan_datagram.size());
+  if (laser2_sending_interface_->sendData(laserscan_datagram.begin(), laserscan_datagram.size()) ==
+    SendingInterface::SendingStatus::IO_EXCEPTION)
+  {
+    checkLaserScan(msg, "laser2");
+  }
 }
 
 void LocatorBridgeNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -324,6 +351,7 @@ void LocatorBridgeNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr m
   Poco::Buffer<char> odom_datagram = RosMsgsDatagramConverter::convertOdometry2DataGram(
     msg,
     ++odom_num_,
+    odometry_velocity_set_,
     shared_from_this());
   odom_sending_interface_->sendData(odom_datagram.begin(), odom_datagram.size());
 }
@@ -332,16 +360,7 @@ bool LocatorBridgeNode::clientConfigGetEntryCb(
   const std::shared_ptr<bosch_locator_bridge::srv::ClientConfigGetEntry::Request> req,
   std::shared_ptr<bosch_locator_bridge::srv::ClientConfigGetEntry::Response> res)
 {
-  const auto & loc_client_config = loc_client_interface_->getConfigList();
-
-  try {
-    res->value = loc_client_config[req->name].toString();
-  } catch (const Poco::NotFoundException & error) {
-    RCLCPP_ERROR_STREAM(get_logger(), "Could not find config entry " << req->name << ".");
-    return false;
-  }
-
-  return true;
+  return get_config_entry(req->name, res->value);
 }
 
 bool LocatorBridgeNode::clientMapSendCb(
@@ -398,6 +417,39 @@ bool LocatorBridgeNode::clientLocalizationStopCb(
 {
   auto query = loc_client_interface_->getSessionQuery();
   auto response = loc_client_interface_->call("clientLocalizationStop", query);
+  return true;
+}
+
+bool LocatorBridgeNode::clientExpandMapEnableCb(
+  const std::shared_ptr<bosch_locator_bridge::srv::ClientExpandMapEnable::Request> req,
+  std::shared_ptr<bosch_locator_bridge::srv::ClientExpandMapEnable::Response>/*res*/)
+{
+  const std::string prior_map_name =
+    req->prior_map_name.empty() ? last_map_name_ : req->prior_map_name;
+
+  auto query = loc_client_interface_->getSessionQuery();
+  query.set("priorMapName", prior_map_name);
+  auto response = loc_client_interface_->call("clientExpandMapEnable", query);
+  return true;
+}
+
+bool LocatorBridgeNode::clientExpandMapDisableCb(
+  const std::shared_ptr<std_srvs::srv::Empty::Request>/*req*/,
+  std::shared_ptr<std_srvs::srv::Empty::Response>/*res*/)
+{
+  auto query = loc_client_interface_->getSessionQuery();
+  auto response = loc_client_interface_->call("clientExpandMapDisable", query);
+  return true;
+}
+
+bool LocatorBridgeNode::clientRecordingSetCurrentPoseCb(
+  const std::shared_ptr<bosch_locator_bridge::srv::ClientRecordingSetCurrentPose::Request> req,
+  std::shared_ptr<bosch_locator_bridge::srv::ClientRecordingSetCurrentPose::Response>/*res*/)
+{
+  auto query = loc_client_interface_->getSessionQuery();
+
+  query.set("pose", RosMsgsDatagramConverter::makePose2d(req->pose));
+  auto response = loc_client_interface_->call("clientRecordingSetCurrentPose", query);
   return true;
 }
 
@@ -481,104 +533,44 @@ void LocatorBridgeNode::syncConfig()
 
   // overwrite current locator config with ros params
 
-  std::string laser_type;
-  declare_parameter("ClientSensor.laser.type", laser_type);
-  get_parameter("ClientSensor.laser.type", laser_type);
-  loc_client_config["ClientSensor.laser.type"] = laser_type;
-
-  std::string laser_address;
-  declare_parameter("ClientSensor.laser.address", laser_address);
-  get_parameter("ClientSensor.laser.address", laser_address);
-  loc_client_config["ClientSensor.laser.address"] = laser_address;
-
-  bool laser_mirror_laser_scans = false;
-  declare_parameter("ClientSensor.laser.mirrorLaserScans", laser_mirror_laser_scans);
-  get_parameter("ClientSensor.laser.mirrorLaserScans", laser_mirror_laser_scans);
-  loc_client_config["ClientSensor.laser.mirrorLaserScans"] = laser_mirror_laser_scans;
-
-  double laser_vehicle_transform_laser_x = 0.0;
-  declare_parameter("ClientSensor.laser.vehicleTransformLaser.x", laser_vehicle_transform_laser_x);
-  get_parameter("ClientSensor.laser.vehicleTransformLaser.x", laser_vehicle_transform_laser_x);
-  loc_client_config["ClientSensor.laser.vehicleTransformLaser.x"] = laser_vehicle_transform_laser_x;
-
-  double laser_vehicle_transform_laser_y = 0.0;
-  declare_parameter("ClientSensor.laser.vehicleTransformLaser.y", laser_vehicle_transform_laser_y);
-  get_parameter("ClientSensor.laser.vehicleTransformLaser.y", laser_vehicle_transform_laser_y);
-  loc_client_config["ClientSensor.laser.vehicleTransformLaser.y"] = laser_vehicle_transform_laser_y;
-
-  double laser_vehicle_transform_laser_yaw = 0.0;
-  declare_parameter(
-    "ClientSensor.laser.vehicleTransformLaser.yaw",
-    laser_vehicle_transform_laser_yaw);
-  get_parameter("ClientSensor.laser.vehicleTransformLaser.yaw", laser_vehicle_transform_laser_yaw);
-  loc_client_config["ClientSensor.laser.vehicleTransformLaser.yaw"] =
-    laser_vehicle_transform_laser_yaw;
-
-  bool enable_laser2 = false;
-  declare_parameter("ClientSensor.enableLaser2", enable_laser2);
-  get_parameter("ClientSensor.enableLaser2", enable_laser2);
-  loc_client_config["ClientSensor.enableLaser2"] = enable_laser2;
-
-  std::string laser2_type;
-  declare_parameter("ClientSensor.laser2.type", laser2_type);
-  get_parameter("ClientSensor.laser2.type", laser2_type);
-  loc_client_config["ClientSensor.laser2.type"] = laser2_type;
-
-  std::string laser2_address;
-  declare_parameter("ClientSensor.laser2.address", laser2_address);
-  get_parameter("ClientSensor.laser2.address", laser2_address);
-  loc_client_config["ClientSensor.laser2.address"] = laser2_address;
-
-  bool laser2_mirror_laser_scans = false;
-  declare_parameter("ClientSensor.laser2.mirrorLaserScans", laser2_mirror_laser_scans);
-  get_parameter("ClientSensor.laser2.mirrorLaserScans", laser2_mirror_laser_scans);
-  loc_client_config["ClientSensor.laser2.mirrorLaserScans"] = laser2_mirror_laser_scans;
-
-  double laser2_vehicle_transform_laser_x = 0.0;
-  declare_parameter(
-    "ClientSensor.laser2.vehicleTransformLaser.x",
-    laser2_vehicle_transform_laser_x);
-  get_parameter("ClientSensor.laser2.vehicleTransformLaser.x", laser2_vehicle_transform_laser_x);
-  loc_client_config["ClientSensor.laser2.vehicleTransformLaser.x"] =
-    laser2_vehicle_transform_laser_x;
-
-  double laser2_vehicle_transform_laser_y = 0.0;
-  declare_parameter(
-    "ClientSensor.laser2.vehicleTransformLaser.y",
-    laser2_vehicle_transform_laser_y);
-  get_parameter("ClientSensor.laser2.vehicleTransformLaser.y", laser2_vehicle_transform_laser_y);
-  loc_client_config["ClientSensor.laser2.vehicleTransformLaser.y"] =
-    laser2_vehicle_transform_laser_y;
-
-  double laser2_vehicle_transform_laser_yaw = 0.0;
-  declare_parameter(
-    "ClientSensor.laser2.vehicleTransformLaser.yaw",
-    laser2_vehicle_transform_laser_yaw);
-  get_parameter(
-    "ClientSensor.laser2.vehicleTransformLaser.yaw",
-    laser2_vehicle_transform_laser_yaw);
-  loc_client_config["ClientSensor.laser2.vehicleTransformLaser.yaw"] =
-    laser2_vehicle_transform_laser_yaw;
-
-  bool autostart = false;
-  declare_parameter("ClientLocalization.autostart", autostart);
-  get_parameter("ClientLocalization.autostart", autostart);
-  loc_client_config["ClientLocalization.autostart"] = autostart;
-
-  bool odometry_enabled = false;
-  declare_parameter("ClientSensor.enableOdometry", odometry_enabled);
-  get_parameter("ClientSensor.enableOdometry", odometry_enabled);
-  loc_client_config["ClientSensor.enableOdometry"] = odometry_enabled;
-
-  bool odometry_tls = false;
-  declare_parameter("ClientSensor.odometryEncryption", odometry_tls);
-  get_parameter("ClientSensor.odometryEncryption", odometry_tls);
-  loc_client_config["ClientSensor.odometryEncryption"] = odometry_tls;
-
-  std::string odometry_address;
-  declare_parameter("ClientSensor.odometryAddress", odometry_address);
-  get_parameter("ClientSensor.odometryAddress", odometry_address);
-  loc_client_config["ClientSensor.odometryAddress"] = odometry_address;
+  std::map<std::string, rclcpp::Parameter> locator_parameters;
+  get_node_parameters_interface()->get_parameters_by_prefix(
+    "localization_client_config",
+    locator_parameters);
+  std::for_each(
+    locator_parameters.begin(), locator_parameters.end(), [&loc_client_config,
+    logger = get_logger()](const std::pair<std::string, rclcpp::Parameter> & param) {
+      switch (param.second.get_type()) {
+        case rclcpp::ParameterType::PARAMETER_BOOL:
+          loc_client_config[param.first] = param.second.as_bool();
+          break;
+        case rclcpp::ParameterType::PARAMETER_INTEGER:
+          loc_client_config[param.first] = param.second.as_int();
+          break;
+        case rclcpp::ParameterType::PARAMETER_DOUBLE:
+          loc_client_config[param.first] = param.second.as_double();
+          break;
+        case rclcpp::ParameterType::PARAMETER_STRING:
+          loc_client_config[param.first] = param.second.as_string();
+          break;
+        case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
+          loc_client_config[param.first] = param.second.as_bool_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
+          loc_client_config[param.first] = param.second.as_integer_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
+          loc_client_config[param.first] = param.second.as_double_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
+          loc_client_config[param.first] = param.second.as_string_array();
+          break;
+        default:
+          RCLCPP_WARN(
+            logger, "Parameter type %s is unsupported for Locator config!",
+            param.second.get_type_name().c_str());
+      }
+    });
 
   RCLCPP_INFO_STREAM(get_logger(), "new loc client config: " << loc_client_config.toString());
   for (const auto & c : loc_client_config) {
@@ -626,60 +618,152 @@ void LocatorBridgeNode::syncConfig()
     provide_odometry_data_ = false;
   }
 
-  loc_client_interface_->setConfigList(loc_client_config);
+  if (!loc_client_interface_->setConfigList(loc_client_config)) {
+    // Try to stop everything before setting config list
+    RCLCPP_WARN(
+      get_logger(),
+      "One of the modes appears to be in a RUN-state. In order to set the configuration parameters,"
+      " all modes are now stopped! Localization is started afterwards automatically.");
+    clientRecordingStopVisualRecordingCb(nullptr, nullptr);
+    clientMapStopCb(nullptr, nullptr);
+    clientLocalizationStopCb(nullptr, nullptr);
+    loc_client_interface_->setConfigList(loc_client_config);
+  }
 }
 
-void LocatorBridgeNode::setupBinaryReceiverInterfaces(const std::string & host)
+void LocatorBridgeNode::checkLaserScan(
+  const sensor_msgs::msg::LaserScan::SharedPtr msg,
+  const std::string & laser) const
 {
+  if (fabs(msg->angle_min + (msg->ranges.size() - 1) * msg->angle_increment - msg->angle_max) >
+    fabs(0.5 * msg->angle_increment))
+  {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "LaserScan message is INVALID: " << msg->angle_min << " (angle_min) + " <<
+        msg->ranges.size() - 1 << " (ranges.size - 1) * " << msg->angle_increment <<
+        " (angle_increment) = " <<
+        msg->angle_min + (msg->ranges.size() - 1) * msg->angle_increment << ", expected " <<
+        msg->angle_max << " (angle_max)");
+  } else {
+    const std::string param_name = "ClientSensor." + laser + ".useIntensities";
+    std::string laser_use_intensities;
+    if (get_config_entry(
+        param_name, laser_use_intensities) &&
+      laser_use_intensities == "true" && msg->ranges.size() != msg->intensities.size())
+    {
+      RCLCPP_ERROR_STREAM(
+        get_logger(),
+        "LaserScan message is INVALID: " << param_name << " is true, but ranges.size (" <<
+          msg->ranges.size() << ") unequal intensities.size (" << msg->intensities.size() << ")");
+    }
+  }
+}
+
+void LocatorBridgeNode::setupBinaryReceiverInterfaces(
+  const std::string & host,
+  const Poco::UInt16 binaryPortsStart)
+{
+  // port definitions for the different interfaces. See Locator API documentation section 12.8
+  Poco::UInt16 binaryClientControlModePort{binaryPortsStart /*default: 9004*/};
+  Poco::UInt16 binaryClientMapMapPort{static_cast<Poco::UInt16>(binaryPortsStart + 1)};
+  Poco::UInt16 binaryClientMapVisualizationPort{static_cast<Poco::UInt16>(binaryPortsStart + 2)};
+  Poco::UInt16 binaryClientRecordingMapPort{static_cast<Poco::UInt16>(binaryPortsStart + 3)};
+  Poco::UInt16 binaryClientRecordingVisualizationPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 4)};
+  Poco::UInt16 binaryClientLocalizationMapPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 5)};
+  Poco::UInt16 binaryClientLocalizationVisualizationPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 6)};
+  Poco::UInt16 binaryClientLocalizationPosePort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 7)};
+  Poco::UInt16 binaryClientGlobalAlignVisualizationPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 8)};
+  Poco::UInt16 binaryClientExpandMapVisualizationPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 9)};
+  Poco::UInt16 binaryClientExpandMapPriorMapPort{
+    static_cast<Poco::UInt16>(binaryPortsStart + 10)};
+
   // Create binary interface for client control mode
   client_control_mode_interface_.reset(
     new ClientControlModeInterface(
       Poco::Net::IPAddress(host),
+      binaryClientControlModePort,
       shared_from_this()));
   client_control_mode_interface_thread_.start(*client_control_mode_interface_);
   // Create binary interface for client map map
   client_map_map_interface_.reset(
     new ClientMapMapInterface(
       Poco::Net::IPAddress(host),
+      binaryClientMapMapPort,
       shared_from_this()));
   client_map_map_interface_thread_.start(*client_map_map_interface_);
   // Create binary interface for client map visualization
   client_map_visualization_interface_.reset(
     new ClientMapVisualizationInterface(
-      Poco::Net::IPAddress(
-        host), shared_from_this()));
+      Poco::Net::IPAddress(host),
+      binaryClientMapVisualizationPort,
+      shared_from_this()));
   client_map_visualization_interface_thread_.start(*client_map_visualization_interface_);
   // Create binary interface for client recording map
   client_recording_map_interface_.reset(
     new ClientRecordingMapInterface(
       Poco::Net::IPAddress(host),
+      binaryClientRecordingMapPort,
       shared_from_this()));
   client_recording_map_interface_thread_.start(*client_recording_map_interface_);
   // Create binary interface for client recording visualization
   client_recording_visualization_interface_.reset(
-    new ClientRecordingVisualizationInterface(Poco::Net::IPAddress(host), shared_from_this()));
+    new ClientRecordingVisualizationInterface(
+      Poco::Net::IPAddress(host),
+      binaryClientRecordingVisualizationPort,
+      shared_from_this()));
   client_recording_visualization_interface_thread_.start(
     *client_recording_visualization_interface_);
   // Create binary interface for client localization map
   client_localization_map_interface_.reset(
     new ClientLocalizationMapInterface(
-      Poco::Net::IPAddress(
-        host), shared_from_this()));
+      Poco::Net::IPAddress(host),
+      binaryClientLocalizationMapPort,
+      shared_from_this()));
   client_localization_map_interface_thread_.start(*client_localization_map_interface_);
   // Create binary interface for ClientLocalizationVisualizationInterface
   client_localization_visualization_interface_.reset(
-    new ClientLocalizationVisualizationInterface(Poco::Net::IPAddress(host), shared_from_this()));
+    new ClientLocalizationVisualizationInterface(
+      Poco::Net::IPAddress(host),
+      binaryClientLocalizationVisualizationPort,
+      shared_from_this()));
   client_localization_visualization_interface_thread_.start(
     *client_localization_visualization_interface_);
   // Create binary interface for ClientLocalizationPoseInterface
   client_localization_pose_interface_.reset(
     new ClientLocalizationPoseInterface(
-      Poco::Net::IPAddress(
-        host), shared_from_this()));
+      Poco::Net::IPAddress(host),
+      binaryClientLocalizationPosePort,
+      shared_from_this()));
   client_localization_pose_interface_thread_.start(*client_localization_pose_interface_);
   // Create binary interface for ClientGlobalAlignVisualizationInterface
   client_global_align_visualization_interface_.reset(
-    new ClientGlobalAlignVisualizationInterface(Poco::Net::IPAddress(host), shared_from_this()));
+    new ClientGlobalAlignVisualizationInterface(
+      Poco::Net::IPAddress(host),
+      binaryClientGlobalAlignVisualizationPort,
+      shared_from_this()));
   client_global_align_visualization_interface_thread_.start(
     *client_global_align_visualization_interface_);
+  // Create binary interface for ClientExpandMapVisualizationInterface
+  client_expandmap_visualization_interface_.reset(
+    new ClientExpandMapVisualizationInterface(
+      Poco::Net::IPAddress(host),
+      binaryClientExpandMapVisualizationPort,
+      shared_from_this()));
+  client_expandmap_visualization_interface_thread_.start(
+    *client_expandmap_visualization_interface_);
+  // Create binary interface for ClientExpandMapPriorMapInterface
+  client_expandmap_priormap_interface_.reset(
+    new ClientExpandMapPriorMapInterface(
+      Poco::Net::IPAddress(host),
+      binaryClientExpandMapPriorMapPort,
+      shared_from_this()));
+  client_expandmap_priormap_interface_thread_.start(
+    *client_expandmap_priormap_interface_);
 }

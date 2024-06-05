@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -38,32 +39,38 @@ static const std::unordered_map<std::string, std::pair<int32_t, int32_t>>
 REQUIRED_MODULE_VERSIONS({
   {"AboutModules", {5, 0}},
   {"Session", {3, 1}},
-  {"Diagnostic", {4, 0}},
-  {"Licensing", {6, 0}},
-  {"Config", {5, 0}},
-  {"AboutBuild", {3, 0}},
+  {"System", {3, 2}},
+  {"Diagnostic", {5, 1}},
+  {"Licensing", {7, 1}},
+  {"Config", {8, 0}},
+  {"AboutBuild", {3, 1}},
   {"Certificate", {3, 0}},
-  {"System", {3, 1}},
-  {"ServerMap", {5, 0}},
-  {"ServerUser", {4, 0}},
-  {"ServerInternal", {2, 0}},
+  {"User", {1, 0}},
+  {"Internal", {1, 0}},
+  {"ServerInternal", {3, 0}},
+  {"ServerMap", {7, 0}},
+  {"ServerPostAlign", {1, 0}},
+  {"ServerUser", {4, 0}}
 });
 
 ServerBridgeNode::ServerBridgeNode(const std::string & nodeName)
-: Node(nodeName) {}
+: Node(nodeName,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true)
+    .automatically_declare_parameters_from_overrides(true))
+{
+}
 
-ServerBridgeNode::~ServerBridgeNode() {}
+ServerBridgeNode::~ServerBridgeNode()
+{
+}
 
 void ServerBridgeNode::init()
 {
   std::string host;
-  declare_parameter("server_host", host);
   get_parameter("server_host", host);
 
   std::string user, pwd;
-  declare_parameter("user_name", user);
   get_parameter("user_name", user);
-  declare_parameter("password", pwd);
   get_parameter("password", pwd);
 
   server_interface_.reset(new LocatorRPCInterface(host, 8082));
@@ -100,7 +107,45 @@ void ServerBridgeNode::syncConfig()
   auto server_config = server_interface_->getConfigList();
 
   // overwrite current locator config with ros params
-  // (nothing to be done yet)
+
+  std::map<std::string, rclcpp::Parameter> locator_parameters;
+  get_node_parameters_interface()->get_parameters_by_prefix(
+    "map_server_config",
+    locator_parameters);
+  std::for_each(
+    locator_parameters.begin(), locator_parameters.end(), [&server_config,
+    logger = get_logger()](const std::pair<std::string, rclcpp::Parameter> & param) {
+      switch (param.second.get_type()) {
+        case rclcpp::ParameterType::PARAMETER_BOOL:
+          server_config[param.first] = param.second.as_bool();
+          break;
+        case rclcpp::ParameterType::PARAMETER_INTEGER:
+          server_config[param.first] = param.second.as_int();
+          break;
+        case rclcpp::ParameterType::PARAMETER_DOUBLE:
+          server_config[param.first] = param.second.as_double();
+          break;
+        case rclcpp::ParameterType::PARAMETER_STRING:
+          server_config[param.first] = param.second.as_string();
+          break;
+        case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
+          server_config[param.first] = param.second.as_bool_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
+          server_config[param.first] = param.second.as_integer_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
+          server_config[param.first] = param.second.as_double_array();
+          break;
+        case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
+          server_config[param.first] = param.second.as_string_array();
+          break;
+        default:
+          RCLCPP_WARN(
+            logger, "Parameter type %s is unsupported for Locator config!",
+            param.second.get_type_name().c_str());
+      }
+    });
 
   RCLCPP_INFO_STREAM(get_logger(), "new server config: " << server_config.toString());
   for (const auto & c : server_config) {
