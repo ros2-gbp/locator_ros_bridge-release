@@ -25,6 +25,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -35,6 +36,8 @@ find_package(Poco REQUIRED COMPONENTS Foundation Net JSON)
 
 set(msg_files
     "msg/ClientControlMode.msg"
+    "msg/ClientExpandMapOverwriteZoneInformation.msg"
+    "msg/ClientExpandMapVisualization.msg"
     "msg/ClientGlobalAlignLandmarkObservationNotice.msg"
     "msg/ClientGlobalAlignLandmarkVisualizationInformation.msg"
     "msg/ClientGlobalAlignVisualization.msg"
@@ -46,10 +49,12 @@ set(msg_files
 
 set(srv_files
     "srv/ClientConfigGetEntry.srv"
+    "srv/ClientExpandMapEnable.srv"
     "srv/ClientMapList.srv"
     "srv/ClientMapSend.srv"
     "srv/ClientMapSet.srv"
     "srv/ClientMapStart.srv"
+    "srv/ClientRecordingSetCurrentPose.srv"
     "srv/StartRecording.srv"
     "srv/ServerMapGetImageWithResolution.srv"
     "srv/ServerMapList.srv"
@@ -65,7 +70,7 @@ ament_export_dependencies(rosidl_default_runtime)
 
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS})
+include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME}_node
   src/main.cpp
@@ -83,6 +88,7 @@ ament_target_dependencies(${PROJECT_NAME}_node
   rclcpp
   geometry_msgs
   nav_msgs
+  sensor_msgs
   std_srvs
   tf2_geometry_msgs
   tf2_ros
@@ -99,7 +105,6 @@ else()
 endif()
 
 add_executable(${PROJECT_NAME}_server_node
-  src/rosmsgs_datagram_converter.cpp
   src/locator_rpc_interface.cpp
   src/server/server_bridge_node.cpp
   src/server/server_main.cpp)

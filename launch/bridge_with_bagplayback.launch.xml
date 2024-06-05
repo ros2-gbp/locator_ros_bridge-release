@@ -23,6 +23,15 @@ limitations under the License.-->
   <!-- ip of the computer, on which the locator software is running -->
   <arg name="locator_ip" default="127.0.0.1"/>
 
+  <!-- port at which the JSON RPC ROKIT Locator Client starts -->
+  <arg name="locator_RPC_Port" default="8080"/>
+
+  <!-- port at which the binary interface ClientControlMode starts -->
+  <arg name="locator_binaryPortsStart" default="9004"/>
+
+  <!-- name of the node -->
+  <arg name="bridge_node_name" default="bridge_node"/>
+
   <!-- login credentials for the locator software -->
   <arg name="locator_user" default="admin"/>
   <arg name="locator_password" default="admin"/>
@@ -33,18 +42,22 @@ limitations under the License.-->
   <!-- bag file to play -->
   <arg name="bag" default=""/>
 
-  <arg name="laser_datagram_port" default="4242"/>
+  <arg name="laser_datagram_port" default="2112"/>
   <arg name="laser_mirror_scans" default="false"/>
   <arg name="laser_x" default="0.0"/>
   <arg name="laser_y" default="0.0"/>
-  <arg name="laser_yaw" default="0.0"/>
+  <arg name="laser_yaw" default="0.0"/>  <!-- angle in degrees -->
+  <arg name="laser_use_intensities" default="false"/>
 
   <arg name="laser2_enable" default="false"/>
   <arg name="laser2_datagram_port" default="2113"/>
   <arg name="laser2_mirror_scans" default="false"/>
   <arg name="laser2_x" default="0.0"/>
   <arg name="laser2_y" default="0.0"/>
-  <arg name="laser2_yaw" default="0.0"/>
+  <arg name="laser2_yaw" default="0.0"/>  <!-- angle in degrees -->
+  <arg name="laser2_use_intensities" default="false"/>
+
+  <arg name="enable_reflector_markers" default="false"/>
 
   <arg name="odom_datagram_port" default="1111"/>
 
@@ -52,8 +65,10 @@ limitations under the License.-->
   <arg name="scan2_topic" default="/scan2"/>
   <arg name="odom_topic" default="/odom"/>
 
-  <node pkg="bosch_locator_bridge" exec="node" name="bridge_node" output="screen">
+  <node pkg="bosch_locator_bridge" exec="node" name="$(arg bridge_node_name)" output="screen">
     <param name="locator_host" value="$(var locator_ip)" />
+    <param name="locator_RPC_Port" value="$(arg locator_RPC_Port)" />
+    <param name="locator_binaryPortsStart" value="$(arg locator_binaryPortsStart)" />
     <param name="laser_datagram_port" value="$(var laser_datagram_port)"/>
     <param name="laser2_datagram_port" value="$(var laser2_datagram_port)"/>
     <param name="odom_datagram_port" value="$(var odom_datagram_port)"/>
@@ -62,28 +77,35 @@ limitations under the License.-->
     <param name="scan_topic" value="$(var scan_topic)"/>
     <param name="scan2_topic" value="$(var scan2_topic)"/>
     <param name="odom_topic" value="$(var odom_topic)"/>
+    <param name="odometry_velocity_set" value="$(arg odometry_velocity_set)"/>
 
     <!-- lasertype needs to be set to "simple" so that we can send LaserDatagrams
          (instead of using one of the laser drivers built into the locator software) -->
-    <param name="ClientSensor.laser.type" value="simple"/>
-    <param name="ClientSensor.laser.address" value="$(var bridge_ip):$(var laser_datagram_port)"/>
-    <param name="ClientSensor.laser.mirrorLaserScans" value="$(var laser_mirror_scans)"/>
-    <param name="ClientSensor.laser.vehicleTransformLaser.x" value="$(var laser_x)"/>
-    <param name="ClientSensor.laser.vehicleTransformLaser.y" value="$(var laser_y)"/>
-    <param name="ClientSensor.laser.vehicleTransformLaser.yaw" value="$(var laser_yaw)"/>
+    <param name="localization_client_config">
+      <param name="ClientSensor.laser.type" value="simple"/>
+      <param name="ClientSensor.laser.address" value="$(var bridge_ip):$(var laser_datagram_port)"/>
+      <param name="ClientSensor.laser.mirrorLaserScans" value="$(var laser_mirror_scans)"/>
+      <param name="ClientSensor.laser.vehicleTransformLaser.x" value="$(var laser_x)"/>
+      <param name="ClientSensor.laser.vehicleTransformLaser.y" value="$(var laser_y)"/>
+      <param name="ClientSensor.laser.vehicleTransformLaser.yaw" value="$(var laser_yaw)"/>
+      <param name="ClientSensor.laser.useIntensities" value="$(var laser_use_intensities)"/>
 
-    <param name="ClientSensor.enableLaser2" value="$(var laser2_enable)"/>
-    <param name="ClientSensor.laser2.type" value="simple"/>
-    <param name="ClientSensor.laser2.address" value="$(var bridge_ip):$(var laser2_datagram_port)"/>
-    <param name="ClientSensor.laser2.mirrorLaserScans" value="$(var laser2_mirror_scans)"/>
-    <param name="ClientSensor.laser2.vehicleTransformLaser.x" value="$(var laser2_x)"/>
-    <param name="ClientSensor.laser2.vehicleTransformLaser.y" value="$(var laser2_y)"/>
-    <param name="ClientSensor.laser2.vehicleTransformLaser.yaw" value="$(var laser2_yaw)"/>
+      <param name="ClientSensor.enableLaser2" value="$(var laser2_enable)"/>
+      <param name="ClientSensor.laser2.type" value="simple"/>
+      <param name="ClientSensor.laser2.address" value="$(var bridge_ip):$(var laser2_datagram_port)"/>
+      <param name="ClientSensor.laser2.mirrorLaserScans" value="$(var laser2_mirror_scans)"/>
+      <param name="ClientSensor.laser2.vehicleTransformLaser.x" value="$(var laser2_x)"/>
+      <param name="ClientSensor.laser2.vehicleTransformLaser.y" value="$(var laser2_y)"/>
+      <param name="ClientSensor.laser2.vehicleTransformLaser.yaw" value="$(var laser2_yaw)"/>
+      <param name="ClientSensor.laser2.useIntensities" value="$(var laser2_use_intensities)"/>
 
-    <param name="ClientLocalization.autostart" value="false"/>
-    <param name="ClientSensor.enableOdometry" value="$(var enable_odometry)"/>
-    <param name="ClientSensor.odometryEncryption" value="false"/>
-    <param name="ClientSensor.odometryAddress" value="$(var bridge_ip):$(var odom_datagram_port)"/>
+      <param name="ClientSensor.enableReflectorMarkers" value="$(var enable_reflector_markers)"/>
+
+      <param name="ClientLocalization.autostart" value="false"/>
+      <param name="ClientSensor.enableOdometry" value="$(var enable_odometry)"/>
+      <param name="ClientSensor.odometryEncryption" value="false"/>
+      <param name="ClientSensor.odometryAddress" value="$(var bridge_ip):$(var odom_datagram_port)"/>
+    </param>
   </node>
 
   <executable cmd="ros2 bag play $(var bag)" output="screen"/>
