@@ -2,8 +2,20 @@
 Changelog for package bosch_locator_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.13 (2024-11-11)
+-------------------
+* update tag compatible with Locator 1.9
+* update to Locator 1.10 `#66 <https://github.com/boschglobal/locator_ros_bridge/issues/66>`_ from boschglobal/humble-v1.10""
+* Contributors: Sheung Ying Yuen-Wille
+
+2.1.12 (2024-11-11)
+-------------------
+* Update readme.md to Locator 1.9 `#65 <https://github.com/boschglobal/locator_ros_bridge/issues/65>`_ from boschglobal/bugfix/update-readme-humble
+* Update CHANGELOG.rst `#63 <https://github.com/boschglobal/locator_ros_bridge/issues/63>`_ from boschglobal/syyuen-changelog-humble
+* Contributors: Sheung Ying Yuen-Wille
+
 2.1.11 (2024-06-04)
------------
+---------------------------
 * made server compatible with Locator version 1.9 (`#61 <https://github.com/boschglobal/locator_ros_bridge/issues/61>`_)
 * compatible with 1.9 (`#58 <https://github.com/boschglobal/locator_ros_bridge/issues/58>`_)
 * Note in the Readme for earlier versions (`#57 <https://github.com/boschglobal/locator_ros_bridge/issues/57>`_)
@@ -18,7 +30,7 @@ Changelog for package bosch_locator_bridge
 * Contributors: Sheung Ying Yuen-Wille, Stefan Laible, TAN Hongkui, Fleer David
 
 2.1.10 (2023-10-31)
------------
+---------------------------
 * update compatible Locator version to 1.8
 * Document the map expansion workflow
 * Add rviz config files for map expansion
