@@ -1,71 +1,38 @@
-[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](LICENSE)
-[![Build status](http://build.ros.org/job/Ndev__locator_ros_bridge__ubuntu_focal_amd64/badge/icon?subject=Build%20farm%3A%20Noetic)](http://build.ros.org/job/Ndev__locator_ros_bridge__ubuntu_focal_amd64/)
-[![Build status](http://build.ros2.org/job/Hdev__locator_ros_bridge__ubuntu_jammy_amd64/badge/icon?subject=Build%20farm%3A%20Humble)](https://build.ros2.org/job/Hdev__locator_ros_bridge__ubuntu_jammy_amd64/)
-[![Build action: Noetic](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml/badge.svg?branch=noetic)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_noetic.yml)
-[![Build action: Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_humble.yml/badge.svg?branch=humble)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_humble.yml)
-[![Build action (utils): Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_utils_humble.yml/badge.svg?branch=humble)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_utils_humble.yml)
+General information about this repository, including legal information and build instructions are given in [README.md](../README.md) in the repository root.
 
----
-**Level Up Your Mobile Robots. Rexroth ROKIT Locator – Your Easy-to-Use Laser Localization Software**
+# bosch_locator_bridge_utils
 
----
+## Overview
 
-# locator_ros_bridge
+This package provides utilities to use `bosch_locator_bridge` directly with [Nav2].
+It provides the ROKIT Locator map as a grid map, and calculates the corresponding transformation from the localization poses.
 
-This repository contains the [bosch_locator_bridge](bosch_locator_bridge) package, which provides a [ROS] interface to the [Rexroth ROKIT Locator].
-It translates ROS messages to the ROKIT Locator API (as described in the ROKIT Locator API documentation) and vice versa.
-It also allows to control the ROKIT Locator via ROS service calls.
+The package has been tested under [ROS 2] Humble and Ubuntu 22.04.
 
-There are versions for the following ROS 1 and ROS 2 distributions:
-* ROS 1: Noetic (branch [noetic](../../tree/noetic), will likely also work on Melodic)
-* ROS 2: Humble (this branch)
+## Quick Start
 
-The repository also contains the [bosch_locator_bridge_utils](bosch_locator_bridge_utils) package, which provides an interface between the bosch_locator_bridge and [Nav2], the navigation stack of ROS 2.
+This section describes how to use this package to setup the localization part of Nav2.
 
-The following video (click on image) gives more information about the ROKIT Locator.
-[![Rexroth ROKIT Locator](https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/rokit/landingpage-stage-bild-keyvisual-locator-gruppe-a.jpg)](https://www.youtube.com/watch?v=g6SIUlXn9Bk)
+#### Start the ROKIT Locator and the ROS Bridge
 
-## Installation
+First of all, the ROKIT Locator and the corresponding ROS bridge must be started. Please see the [README.md](../bosch_locator_bridge/README.md) of the `bosch_locator_bridge` package for details.
 
-### Installing from Debian Package
+    ros2 launch bosch_locator_bridge bridge.launch.xml
 
-You can install the `bosch_locator_bridge` package directly:
+#### Provide interface to Nav2
 
-    sudo apt install ros-humble-bosch-locator-bridge
+Then, start the `locator_node` and the `locator_map_server` nodes with
 
-Note that the installed package may contain an older software version, which corresponds to the latest tag 2.1.x here: [tags].
-Since the release of a package can take a while, the installed package may even be from an earlier tag.
-To be sure, check the version of the installed package as follows:
+    ros2 launch bosch_locator_bridge_utils localization_launch.py
 
-    apt show ros-humble-bosch-locator-bridge
+From the localization poses, the `locator_node` node calculates and broadcasts the transformation between the `map` and the `odom` frame, which is required for a complete transformation tree for Nav2.
+The `map_server` node converts the point cloud map from the ROKIT Locator to a grid map, also needed by Nav2.
 
-### Building from Source
+To see the map and the transformation tree, start RViz with
 
-#### Dependencies
+    ros2 run rviz2 rviz2 -d $(ros2 pkg prefix bosch_locator_bridge_utils)/share/bosch_locator_bridge_utils/config/localization.rviz
 
-- [ROS]
-- [Poco] C++ library (Should be installed automatically with rosdep, otherwise try: ```sudo apt install libpoco-dev```)
-
-#### Building
-
-To build from source, make sure your colcon workspace is set up correctly. Then clone the latest version of this branch from the repository into your colcon workspace and compile the package using
-
-    cd colcon_ws
-    rosdep install --from-paths . --ignore-src
-    colcon build --symlink-install
-
-## How to Get Started
-
-To get started, take a look at the [README.md](bosch_locator_bridge/README.md) of the bosch_locator_bridge package.
-And for the bosch_locator_bridge_utils package, please have a look at [README.md](bosch_locator_bridge_utils/README.md).
-
-## License
-
-locator_ros_bridge is open-sourced under the Apache-2.0 license. See the [LICENSE](LICENSE) file for details.
-
+Now everything is ready in terms of localization to start navigating...
 
 [Nav2]: https://navigation.ros.org/
-[ROS]: https://www.ros.org/
-[Poco]: https://pocoproject.org/
-[Rexroth ROKIT Locator]: https://www.boschrexroth.com/en/xc/products/product-groups/components-for-mobile-robotics/index
-[tags]: https://github.com/boschglobal/locator_ros_bridge/tags
+[ROS 2]: https://docs.ros.org/en/humble
