@@ -1,0 +1,49 @@
+ros-humble-bosch-locator-bridge-utils (2.1.14-1jammy) jammy; urgency=high
+
+  * Add bosch_locator_bridge_utils backward compatibility for galactic (#68 <https://github.com/boschglobal/locator_ros_bridge/issues/68>)
+  * Add hint that humble branch might also work for galactic
+  * Contributors: Fabian König
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Tue, 13 May 2025 22:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.13-1jammy) jammy; urgency=high
+
+
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Sun, 10 Nov 2024 23:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.12-1jammy) jammy; urgency=high
+
+
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Sun, 10 Nov 2024 23:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.11-1jammy) jammy; urgency=high
+
+
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Mon, 03 Jun 2024 22:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.10-1jammy) jammy; urgency=high
+
+  * update to humble
+  * Contributors: Sheung Ying Yuen-Wille
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Mon, 30 Oct 2023 23:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.9-1jammy) jammy; urgency=high
+
+  * Use new lifecycle node interface
+  * Add missing include
+  * Contributors: Sheung Ying Yuen-Wille, Stefan Laible
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Wed, 22 Mar 2023 23:00:00 -0000
+
+ros-humble-bosch-locator-bridge-utils (2.1.8-1jammy) jammy; urgency=high
+
+  * Initial version
+  * Contributors: Fabian König, Stefan Laible
+
+ -- Stefan Laible <stefan.laible@de.bosch.com>  Mon, 13 Feb 2023 23:00:00 -0000
+
+
