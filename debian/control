@@ -1,0 +1,12 @@
+Source: ros-humble-bosch-locator-bridge
+Section: misc
+Priority: optional
+Maintainer: Stefan Laible <stefan.laible@de.bosch.com>
+Build-Depends: debhelper (>= 9.0.0), libpoco-dev, ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-geometry-msgs, ros-humble-launch-xml, ros-humble-nav-msgs, ros-humble-pcl-conversions, ros-humble-rclcpp, ros-humble-rosidl-default-generators, ros-humble-sensor-msgs, ros-humble-std-srvs, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros, ros-humble-ros-workspace, ros-humble-rosidl-typesupport-fastrtps-c, ros-humble-rosidl-typesupport-fastrtps-cpp
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-bosch-locator-bridge
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libpoco-dev, ros-humble-geometry-msgs, ros-humble-launch-xml, ros-humble-nav-msgs, ros-humble-pcl-conversions, ros-humble-rclcpp, ros-humble-rosidl-default-runtime, ros-humble-sensor-msgs, ros-humble-std-srvs, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros, ros-humble-ros-workspace
+Description: ROS interface to Rexroth ROKIT Locator
