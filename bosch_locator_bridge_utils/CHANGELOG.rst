@@ -2,6 +2,11 @@
 Changelog for package bosch_locator_bridge_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.16 (2026-07-28)
+-------------------
+* Declare nav2_common as a runtime dependency (`#83 <https://github.com/boschglobal/locator_ros_bridge/issues/83>`_)
+* Contributors: Plumezz
+
 2.1.15 (2025-11-10)
 -------------------
 
