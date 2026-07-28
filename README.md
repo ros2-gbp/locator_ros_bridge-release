@@ -1,95 +1,90 @@
-[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](LICENSE)
-[![Build status](http://build.ros2.org/job/Hdev__locator_ros_bridge__ubuntu_jammy_amd64/badge/icon?subject=Build%20farm%3A%20Humble)](https://build.ros2.org/job/Hdev__locator_ros_bridge__ubuntu_jammy_amd64/)
-[![Build action Locator: Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_locator_humble.yml/badge.svg?branch=humble)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_locator_humble.yml)
-[![Build action Locator (utils): Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_locator_utils_humble.yml/badge.svg?branch=humble)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_locator_utils_humble.yml)
-[![Build action Navigator: Humble](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_navigator_humble.yml/badge.svg?branch=humble)](https://github.com/boschglobal/locator_ros_bridge/actions/workflows/build_navigator_humble.yml)
+General information about this repository, including legal information and build instructions are given in [README.md](../README.md) in the repository root.
 
----
-**Level Up Your Mobile Robots. Rexroth ROKIT – Your Easy-to-Use Laser Localization and Navigation Software**
+# bosch_navigator_bridge
 
----
+## Overview
 
-# locator_ros_bridge
+This package provides a [ROS 2] interface to the [Rexroth ROKIT Navigator].
+It translates ROS2 messages to the ROKIT Navigation API (as describe in the ROKIT Navigator API documentation) and vice versa.
+It is important to know that the bridge can only function when using the Locator.
 
-This repository contains the [bosch_locator_bridge](bosch_locator_bridge) package, which provides a [ROS] interface to the [Rexroth ROKIT Locator].
-It translates ROS messages to the ROKIT Locator API (as described in the ROKIT Locator API documentation) and vice versa.
-It also allows to control the ROKIT Locator via ROS service calls.
-
-There are versions for the following ROS 1 and ROS 2 distributions:
-
-* ROS 1: Noetic (branch [noetic](../../tree/noetic), will likely also work on Melodic) - EOL
-* ROS 2: Humble (this branch, will likely also work on Galactic)
-
-The repository also contains the [bosch_locator_bridge_utils](bosch_locator_bridge_utils) package, which provides an interface between the bosch_locator_bridge and [Nav2], the navigation stack of ROS 2.
-
-The following video (click on image) gives more information about the ROKIT Locator.
-
-<a href="https://www.youtube.com/watch?v=g6SIUlXn9Bk">
-  <img src="https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/rokit/landingpage-stage-bild-keyvisual-locator-gruppe-a.jpg" alt="Rexroth ROKIT Locator" width="75%">
-</a>
+The package has been tested under [ROS 2] Humble and Ubuntu 22.04.
+The bridge is compatible with ROKIT Navigator version 2.0.
 
 
-# navigator_ros_bridge
+The following video gives more information about the ROKIT Navigator:
+[[Rexroth ROKIT Navigator]](https://www.youtube.com/watch?v=7DCcJIb_GD8)
 
-This repository contains the [bosch_navigator_bridge](bosch_navigator_bridge) package, which provides a [ROS2] interface to the [Rexroth ROKIT Navigator].
-It translates ROS messages to the ROKIT Navigator API (as described in the ROKIT Navigator API documentation) and vice versa.
+## Quick Start
+This shows you how to start the bridge.
 
-This version is compatible with the following ROS 2 distribution:
-* ROS 2: Humble (this branch)
+#### Ensure the ROKIT Navigator is reachable from your computer
 
-<a href="https://www.boschrexroth.com/en/gb/products/industrial-solutions/mobile-robotics/components-for-mobile-robotics/">
-  <img src="https://dc-mkt-prod.cloud.bosch.tech/xrm/media/global/product_group_1/components_for_mobile_robotics/rokit/keyvisual-rokitnavigator-vda5050_1280x720.webp" alt="Rexroth ROKIT Navigator" width="75%">
-</a>
+Make sure the ROKIT Navigator is installed and running on a computer in your network. You can test this by running the following command in a terminal (replace `<NAVIGATOR_IP>` by the IP address of the computer running the ROKIT Navigator):
 
+```sh
+curl --header "Content-Type: application/json" --request POST --data '{"jsonrpc":"2.0","method":"aboutModulesList","params":{"query":{}},"id":1}' http://<NAVIGATOR_IP>:8082
+```
 
-## Installation
+#### Start Bridge Node
 
-### Installing from Debian Package
+Start the bridge node with
 
-You can install the `bosch_locator_bridge` package directly:
+    ros2 launch bosch_navigator_bridge bridge.launch.xml bridge_ip:=<HOST_IP> nav_ip:=<NAVIGATOR_IP> loc_ip:=<LOCATOR_IP> nav_user:=<USER> nav_password:=<PASSWORD> odometry_pose_set:=<ODOMETRY_POSE_SET> odom_topic:=<ODOM_TOPIC> cmd_vel_topic:=<TWIST_TOPIC> feedback_datagram_port:=<FEEDBACK_PORT>
 
-    sudo apt install ros-humble-bosch-locator-bridge
+ where
+- `<HOST_IP>` is the IP address of the computer the bridge is to be started
+- `<NAVIGATOR_IP>` is the IP address of the computer where the ROKIT Navigator is running
+- `<LOCATOR_IP>` is the IP address of the computer where the ROKIT Locator is running 
+- `<USER>` and `<PASSWORD>` are the credentials to log into the ROKIT Navigator
+- `<ODOMETRY_POSE_SET>` this determines whether the pose within the odometry is considered valid and used or only the twist
+- `<ODOM_TOPIC>` is the topic name of the odometry 
+- `<TWIST_TOPIC>` is the topic name of the twist
+- `<FEEDBACK_PORT>` ist the port of the client motion feedback interface
 
-Note that the installed package may contain an older software version, which corresponds to the latest tag 2.1.x here: [tags].
-Since the release of a package can take a while, the installed package may even be from an earlier tag.
-To be sure, check the version of the installed package as follows:
+Since ROKIT Navigator is running inside a container, the `<HOST_IP>` has to be set to docker host IP address (e.g 172.17.0.1) instead of localhost IP address (127.0.0.1).
 
-    apt show ros-humble-bosch-locator-bridge
+For additional arguments please refer to the launch file [bridge.launch.xml](./launch/bridge.launch.xml).
 
-### Building from Source
+For the bridge to function completely, the navigator's automatic mode must be started via the aXessor. Additionally, the vehicle kinematics and limits must be configured through the aXessor. The connection to the FMS's MQTT broker must also be configured there.
 
-#### Dependencies
+## Nodes
 
-- [ROS]
-- [Poco] C++ library (Should be installed automatically with rosdep, otherwise try: ```sudo apt install libpoco-dev```)
+### bridge_node
 
-#### Building
+This node provides an interface to the navigation client.
 
-To build from source, make sure your colcon workspace is set up correctly. Then clone the latest version of this branch from the repository into your colcon workspace and compile the package using
+#### ROKIT Navigator Configuration
 
-    cd colcon_ws
-    rosdep install --from-paths . --ignore-src
-    colcon build --symlink-install
-
-## How to Get Started
-
-### locator_ros_bridge
-To get started, take a look at the [README.md](bosch_locator_bridge/README.md) of the bosch_locator_bridge package.
-And for the bosch_locator_bridge_utils package, please have a look at [README.md](bosch_locator_bridge_utils/README.md).
-
-### navigator_ros_bridge
-To get started, take a look at the [README.md](bosch_navigator_bridge/README.md) of the bosch_navigator_bridge package.
+For a correct configuration, it is important that `ClientMotion.feedback.address` is set to the IP address (with port) of the computer where the Navigator Bridge is running. Additionally, it is important that `ClientLocalization.pose.address` is set to IP address (with port) from which the Navigator container can reach the Locator.  
 
 
-## License
+#### Subscribed Topics
 
-locator_ros_bridge is open-sourced under the Apache-2.0 license. See the [LICENSE](LICENSE) file for details.
+* **`/odom`** ([nav_msgs/msg/Odometry])
 
-navigator_ros_bridge is open-sourced under the Apache-2.0 license. See the [LICENSE](LICENSE) file for details.
+    The Odom topic is used for feedback, which is then forwarded to the ROKIT Navigator. 
 
 
-[Nav2]: https://navigation.ros.org/
-[ROS]: https://www.ros.org/
-[Poco]: https://pocoproject.org/
-[Rexroth ROKIT Locator]: https://www.boschrexroth.com/en/xc/products/product-groups/components-for-mobile-robotics/index
-[tags]: https://github.com/boschglobal/locator_ros_bridge/tags
+#### Published Topics
+
+* **`/cmd_vel`** ([geometry_msgs/msg/Twist])
+  
+    The Twist topic is the command topic for the Client Motion. Command inputs are converted to Twist messages and published on the `cmd_vel`topic.
+
+#### Parameters
+
+* **`nav_host`**
+     The IP address of the computer where ROKIT Navigator is running
+* **`nav_rpc_port`**
+     The port for the ROKIT Navigator JSON RPC client interface
+* **`nav_binary_ports_start`**
+     The port where the binary interface starts
+* **`feedback_datagram_port`**
+     The port for the client motion feedback interface, coming from the Bridge
+* **`user_name`**
+     The user name of the navigator
+* **`password`**
+     The password of the navigator
+* **`odometry_pose_set`**
+     This determines whether the pose within the odometry is considered valid and used or only the twist
